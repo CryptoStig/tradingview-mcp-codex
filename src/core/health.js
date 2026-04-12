@@ -5,6 +5,21 @@ import { getClient, getTargetInfo, evaluate } from '../connection.js';
 import { existsSync } from 'fs';
 import { execSync, spawn } from 'child_process';
 
+function detectWindowsStoreTradingView() {
+  try {
+    const command = [
+      'powershell',
+      '-NoProfile',
+      '-Command',
+      "\"$pkg = Get-AppxPackage *TradingView* | Sort-Object Version -Descending | Select-Object -First 1; if ($pkg -and $pkg.InstallLocation) { Join-Path $pkg.InstallLocation 'TradingView.exe' }\"",
+    ];
+    const output = execSync(command.join(' '), { timeout: 5000 }).toString().trim();
+    return output && existsSync(output) ? output : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function healthCheck() {
   await getClient();
   const target = await getTargetInfo();
@@ -195,6 +210,10 @@ export async function launch({ port, kill_existing } = {}) {
       tvPath = execSync(cmd, { timeout: 3000 }).toString().trim().split('\n')[0];
       if (tvPath && !existsSync(tvPath)) tvPath = null;
     } catch { /* ignore */ }
+  }
+
+  if (!tvPath && platform === 'win32') {
+    tvPath = detectWindowsStoreTradingView();
   }
 
   if (!tvPath && platform === 'darwin') {

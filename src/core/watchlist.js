@@ -2,7 +2,42 @@
  * Core watchlist logic.
  * Uses TradingView's internal widget API with DOM fallback.
  */
-import { evaluate, evaluateAsync, getClient } from '../connection.js';
+import { evaluate, getClient } from '../connection.js';
+
+async function readVisibleWatchlistSymbols() {
+  const snapshot = await evaluate(`
+    (function() {
+      var rightArea = document.querySelector('[class*="layout__area--right"]');
+      if (!rightArea || rightArea.offsetWidth < 50) return [];
+
+      var seen = {};
+      var results = [];
+      var symbolEls = rightArea.querySelectorAll('[data-symbol-full]');
+      for (var i = 0; i < symbolEls.length; i++) {
+        var sym = symbolEls[i].getAttribute('data-symbol-full');
+        if (sym && !seen[sym]) {
+          seen[sym] = true;
+          results.push(sym);
+        }
+      }
+
+      if (results.length > 0) return results;
+
+      var items = rightArea.querySelectorAll('[class*="symbolName"], [class*="tickerName"], [class*="symbol-"]');
+      for (var j = 0; j < items.length; j++) {
+        var text = items[j].textContent.trim();
+        if (text && /^[A-Z][A-Z0-9.:!]{0,20}$/.test(text) && !seen[text]) {
+          seen[text] = true;
+          results.push(text);
+        }
+      }
+
+      return results;
+    })()
+  `);
+
+  return Array.isArray(snapshot) ? snapshot : [];
+}
 
 export async function get() {
   // Try internal API first — reads from the active watchlist widget
@@ -65,6 +100,8 @@ export async function get() {
 export async function add({ symbol }) {
   // Use keyboard shortcut to open symbol search in watchlist, type symbol, press Enter
   const c = await getClient();
+  const beforeSymbols = await readVisibleWatchlistSymbols();
+  const targetSymbol = String(symbol).trim().toUpperCase();
 
   // First ensure watchlist panel is open
   const panelState = await evaluate(`
@@ -127,6 +164,20 @@ export async function add({ symbol }) {
   // Press Escape to close search
   await c.Input.dispatchKeyEvent({ type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
   await c.Input.dispatchKeyEvent({ type: 'keyUp', key: 'Escape', code: 'Escape' });
+  await new Promise(r => setTimeout(r, 500));
 
-  return { success: true, symbol, action: 'added' };
+  const afterSymbols = await readVisibleWatchlistSymbols();
+  const addedSymbol = afterSymbols.find(sym => !beforeSymbols.includes(sym));
+  const confirmed = afterSymbols.some(sym => String(sym).toUpperCase().includes(targetSymbol));
+
+  if (!confirmed) {
+    throw new Error(`Watchlist add could not be confirmed for symbol: ${symbol}`);
+  }
+
+  return {
+    success: true,
+    symbol,
+    action: 'added',
+    confirmed_symbol: addedSymbol || afterSymbols.find(sym => String(sym).toUpperCase().includes(targetSymbol)) || symbol,
+  };
 }

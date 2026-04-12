@@ -1,7 +1,7 @@
 /**
  * Morning brief core logic.
  * Reads rules.json, scans watchlist symbols, returns structured data
- * for Claude to apply bias criteria and generate a session brief.
+ * for the connected assistant to apply bias criteria and generate a session brief.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
@@ -13,6 +13,13 @@ import * as data from "./data.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../");
 const SESSIONS_DIR = join(homedir(), ".tradingview-mcp", "sessions");
+
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function loadRules(rulesPath) {
   const candidates = [
@@ -117,7 +124,7 @@ export async function runBrief({ rules_path } = {}) {
 export function saveSession({ brief, date } = {}) {
   mkdirSync(SESSIONS_DIR, { recursive: true });
 
-  const dateStr = date || new Date().toISOString().split("T")[0];
+  const dateStr = date || getLocalDateString();
   const filePath = join(SESSIONS_DIR, `${dateStr}.json`);
 
   const existing = existsSync(filePath)
@@ -135,7 +142,7 @@ export function saveSession({ brief, date } = {}) {
 }
 
 export function getSession({ date } = {}) {
-  const dateStr = date || new Date().toISOString().split("T")[0];
+  const dateStr = date || getLocalDateString();
   const filePath = join(SESSIONS_DIR, `${dateStr}.json`);
 
   if (existsSync(filePath)) {
@@ -145,7 +152,7 @@ export function getSession({ date } = {}) {
   // Fall back to yesterday
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  const yesterdayStr = getLocalDateString(yesterday);
   const yesterdayPath = join(SESSIONS_DIR, `${yesterdayStr}.json`);
 
   if (existsSync(yesterdayPath)) {

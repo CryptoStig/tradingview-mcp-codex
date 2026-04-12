@@ -5,7 +5,7 @@ If you found this from the YouTube video — welcome. This is the improved fork.
 Built on top of the original [tradingview-mcp](https://github.com/tradesdontlie/tradingview-mcp) by [@tradesdontlie](https://github.com/tradesdontlie). Full credit to them for the foundation. This fork adds a morning brief workflow, a rules config, and fixes the launch bug on TradingView Desktop v2.14+.
 
 > [!WARNING]
-> **Not affiliated with TradingView Inc. or Anthropic.** This tool connects to your locally running TradingView Desktop app via Chrome DevTools Protocol. Review the [Disclaimer](#disclaimer) before use.
+> **Not affiliated with TradingView Inc. or OpenAI.** This tool connects to your locally running TradingView Desktop app via Chrome DevTools Protocol. Review the [Disclaimer](#disclaimer) before use.
 
 > [!IMPORTANT]
 > **Requires a valid TradingView subscription.** This tool does not bypass any TradingView paywall. It reads from and controls the TradingView Desktop app already running on your machine.
@@ -19,7 +19,7 @@ Built on top of the original [tradingview-mcp](https://github.com/tradesdontlie/
 
 | Feature | What it does |
 |---------|-------------|
-| `morning_brief` | One command that scans your watchlist, reads all your indicators, and returns structured data for Claude to generate your session bias |
+| `morning_brief` | One command that scans your watchlist, reads all your indicators, and returns structured data your assistant can turn into a session bias |
 | `session_save` / `session_get` | Saves your daily brief to `~/.tradingview-mcp/sessions/` so you can compare today vs yesterday |
 | `rules.json` | Write your trading rules once — bias criteria, risk rules, watchlist. The morning brief applies them automatically every day |
 | Launch bug fix | Fixed `tv_launch` compatibility with TradingView Desktop v2.14+ |
@@ -27,19 +27,63 @@ Built on top of the original [tradingview-mcp](https://github.com/tradesdontlie/
 
 ---
 
-## One-Shot Setup
+## One-Click Setup for Codex on Windows
 
-Paste this into Claude Code and it will handle everything:
+If you are using **Codex on Windows**, this repo now includes a guided installer.
 
+1. Clone or download this repo.
+2. Double-click `setup-codex-windows.bat`
+3. Follow the prompts. The installer will:
+   - run `npm install`
+   - create or preserve `rules.json`
+   - open `rules.json` so you can fill in your watchlist and rules
+   - register the MCP server with Codex using `codex mcp add`
+   - offer to launch TradingView Desktop in debug mode
+   - tell you the exact next prompt to run in Codex
+
+If you prefer the terminal, run:
+
+```powershell
+npm run setup:codex:windows
 ```
-Set up TradingView MCP Jackson for me. 
-Clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git to ~/tradingview-mcp-jackson, run npm install, then add it to my MCP config at ~/.claude/.mcp.json (merge with any existing servers, don't overwrite them). 
-The config block is: { "mcpServers": { "tradingview": { "command": "node", "args": ["/Users/YOUR_USERNAME/tradingview-mcp-jackson/src/server.js"] } } } — replace YOUR_USERNAME with my actual username.
-Then copy rules.example.json to rules.json and open it so I can fill in my trading rules.
-Finally restart and verify with tv_health_check.
+
+After setup, fully restart Codex and ask:
+
+```text
+Use tv_health_check to verify TradingView is connected.
 ```
 
-Or follow the manual steps below.
+Then:
+
+```text
+Run morning_brief and give me my session bias.
+```
+
+## One-Shot Prompt for Codex
+
+If you want Codex to do the local setup work for you, paste this into Codex:
+
+```text
+Set up TradingView MCP Jackson for me on this machine.
+Clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git into a local folder, run npm install, register the MCP server with Codex using `codex mcp add tradingview -- node <ABSOLUTE_PATH_TO_REPO>\src\server.js`, copy rules.example.json to rules.json if rules.json does not already exist, and open rules.json so I can fill in my watchlist and trading rules. Then tell me the exact next command or prompt to run to verify the TradingView connection with tv_health_check.
+```
+
+Use the Windows installer if you want the smoothest path. The prompt above is useful when you want Codex to walk through the same setup interactively.
+
+## Best Client for This Repo
+
+Use `Codex Desktop` or `Codex CLI` if you want the AI to control your local TradingView Desktop app.
+
+This repository is a local MCP server that talks to:
+
+1. your local AI client over stdio
+2. your local TradingView Desktop app over Chrome DevTools Protocol on `localhost:9222`
+
+That makes Codex the best fit.
+
+ChatGPT on the web is not a direct replacement for this setup because it does not natively control your local desktop apps through a local stdio MCP process. If you want to use OpenAI tooling with this repo today, use Codex.
+
+Then follow the setup steps below.
 
 ---
 
@@ -47,7 +91,7 @@ Or follow the manual steps below.
 
 - **TradingView Desktop app** (paid subscription required for real-time data)
 - **Node.js 18+**
-- **Claude Code** (for MCP tools) or any terminal (for CLI)
+- **Codex** (for MCP tools) or any terminal (for CLI)
 - **macOS, Windows, or Linux**
 
 ---
@@ -71,7 +115,7 @@ cp rules.example.json rules.json
 Open `rules.json` and fill in:
 - Your **watchlist** (symbols to scan each morning)
 - Your **bias criteria** (what makes something bullish/bearish/neutral for you)
-- Your **risk rules** (the rules you want Claude to check before every session)
+- Your **risk rules** (the rules you want your assistant to check before every session)
 
 ### 3. Launch TradingView with CDP
 
@@ -94,30 +138,23 @@ scripts\launch_tv_debug.bat
 
 Or use the MCP tool after setup: `"Use tv_launch to start TradingView in debug mode"`
 
-### 4. Add to Claude Code
+### 4. Add to Codex
 
-Add to `~/.claude/.mcp.json` (merge with any existing servers):
+The Windows installer handles this for you. If you want to do it manually in Codex instead:
 
-```json
-{
-  "mcpServers": {
-    "tradingview": {
-      "command": "node",
-      "args": ["/Users/YOUR_USERNAME/tradingview-mcp-jackson/src/server.js"]
-    }
-  }
-}
+```powershell
+codex mcp add tradingview -- node C:\Users\YOUR_USERNAME\tradingview-mcp-jackson\src\server.js
 ```
 
-Replace `YOUR_USERNAME` with your actual username. On Mac: `echo $USER` to check.
+Then fully restart Codex so it reloads MCP servers.
 
 ### 5. Verify
 
-Restart Claude Code, then ask: *"Use tv_health_check to verify TradingView is connected"*
+Restart Codex, then ask: *"Use tv_health_check to verify TradingView is connected"*
 
 ### 6. Run your first morning brief
 
-Ask Claude: *"Run morning_brief and give me my session bias"*
+Ask Codex: *"Run morning_brief and give me my session bias"*
 
 Or from the terminal:
 ```bash
@@ -134,8 +171,8 @@ This is the feature that turns this from a toolkit into a daily habit.
 **Before every session:**
 
 1. TradingView is open (launched with debug port)
-2. Run: `tv brief` in your terminal (or ask Claude: *"run morning_brief"*)
-3. Claude scans every symbol in your watchlist, reads your indicator values, applies your `rules.json` criteria, and prints:
+2. Run: `tv brief` in your terminal (or ask Codex: *"run morning_brief"*)
+3. Codex scans every symbol in your watchlist, reads your indicator values, applies your `rules.json` criteria, and prints:
 
 ```
 BTCUSD  | BIAS: Bearish  | KEY LEVEL: 94,200  | WATCH: RSI crossing 50 on 4H
@@ -166,12 +203,12 @@ Overall: Cautious session. BTC leading bearish, SOL the exception — watch for 
 
 ---
 
-## How Claude Knows Which Tool to Use
+## How Codex Knows Which Tool to Use
 
-Claude reads `CLAUDE.md` automatically when working in this project. It contains the full decision tree.
+Codex can use `AGENTS.md` in the repo root for tool-selection guidance.
 
-| You say... | Claude uses... |
-|------------|---------------|
+| You say... | Codex uses... |
+|------------|--------------|
 | "Run my morning brief" | `morning_brief` → apply rules → `session_save` |
 | "What was my bias yesterday?" | `session_get` |
 | "What's on my chart?" | `chart_get_state` → `data_get_study_values` → `quote_get` |
@@ -292,7 +329,7 @@ Full command list: `tv --help`
 |---------|----------|
 | `cdp_connected: false` | TradingView isn't running with `--remote-debugging-port=9222`. Use the launch script. |
 | `ECONNREFUSED` | TradingView isn't running or port 9222 is blocked |
-| MCP server not showing in Claude Code | Check `~/.claude/.mcp.json` syntax, restart Claude Code |
+| MCP server not showing in Codex | Run `codex mcp list`, confirm the `tradingview` entry, then restart Codex |
 | `tv` command not found | Run `npm link` from the project directory |
 | `morning_brief` — "No rules.json found" | Run `cp rules.example.json rules.json` and fill it in |
 | `morning_brief` — watchlist empty | Add symbols to the `watchlist` array in `rules.json` |
@@ -304,7 +341,7 @@ Full command list: `tv --help`
 ## Architecture
 
 ```
-Claude Code  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  TradingView Desktop (Electron)
+Codex  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  TradingView Desktop (Electron)
 ```
 
 - **78 original tools** + **3 morning brief tools** = 81 MCP tools total

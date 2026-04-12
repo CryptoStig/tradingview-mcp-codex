@@ -90,7 +90,7 @@ registerMorningTools(server);
 
 // Startup notice (stderr so it doesn't interfere with MCP stdio protocol)
 process.stderr.write(
-  "⚠  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc. or Anthropic.\n",
+  "⚠  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc. or OpenAI.\n",
 );
 process.stderr.write(
   "   Ensure your usage complies with TradingView's Terms of Use.\n\n",
@@ -99,3 +99,4 @@ process.stderr.write(
 // Start stdio transport
 const transport = new StdioServerTransport();
 await server.connect(transport);
+

@@ -14,7 +14,8 @@
   "scripts": {
     "start": "node src/server.js",
     "tv": "node src/cli/index.js",
-    "test": "node --test tests/e2e.test.js tests/pine_analyze.test.js",
+    "setup:codex:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\setup_codex_windows.ps1",
+    "test": "node --test tests/e2e.test.js tests/pine_analyze.test.js tests/cli.test.js",
     "test:e2e": "node --test tests/e2e.test.js",
     "test:unit": "node --test tests/pine_analyze.test.js tests/cli.test.js",
     "test:cli": "node --test tests/cli.test.js",

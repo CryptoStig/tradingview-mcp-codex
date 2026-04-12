@@ -22,7 +22,7 @@ async function pollLoop(fetcher, { interval = 500, dedupe = true, label = 'strea
 
   // Emit header with compliance notice
   const start = Date.now();
-  process.stderr.write(`\u26A0  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc. or Anthropic.\n`);
+  process.stderr.write(`\u26A0  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc. or OpenAI.\n`);
   process.stderr.write(`   Streams from your locally running TradingView Desktop instance only.\n`);
   process.stderr.write(`   Does not connect to TradingView servers. Requires --remote-debugging-port=9222.\n`);
   process.stderr.write(`   Ensure your usage complies with TradingView's Terms of Use.\n`);
@@ -333,3 +333,4 @@ async function fetchAllPanes() {
 export async function streamAllPanes({ interval } = {}) {
   return pollLoop(fetchAllPanes, { interval: interval || 500, label: 'all-panes' });
 }
+
