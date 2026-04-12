@@ -1,4 +1,4 @@
-# TradingView MCP Jackson
+# TradingView MCP Codex
 
 If you found this from the YouTube video — welcome. This is the improved fork. Everything you need is below.
 
@@ -64,8 +64,8 @@ Run morning_brief and give me my session bias.
 If you want Codex to do the local setup work for you, paste this into Codex:
 
 ```text
-Set up TradingView MCP Jackson for me on this machine.
-Clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git into a local folder, run npm install, register the MCP server with Codex using `codex mcp add tradingview -- node <ABSOLUTE_PATH_TO_REPO>\src\server.js`, copy rules.example.json to rules.json if rules.json does not already exist, and open rules.json so I can fill in my watchlist and trading rules. Then tell me the exact next command or prompt to run to verify the TradingView connection with tv_health_check.
+Set up TradingView MCP Codex for me on this machine.
+Clone https://github.com/CryptoStig/tradingview-mcp-codex.git into a local folder, run npm install, register the MCP server with Codex using `codex mcp add tradingview -- node <ABSOLUTE_PATH_TO_REPO>\src\server.js`, copy rules.example.json to rules.json if rules.json does not already exist, and open rules.json so I can fill in my watchlist and trading rules. Then tell me the exact next command or prompt to run to verify the TradingView connection with tv_health_check.
 ```
 
 Use the Windows installer if you want the smoothest path. The prompt above is useful when you want Codex to walk through the same setup interactively.
@@ -101,8 +101,8 @@ Then follow the setup steps below.
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git ~/tradingview-mcp-jackson
-cd ~/tradingview-mcp-jackson
+git clone https://github.com/CryptoStig/tradingview-mcp-codex.git ~/tradingview-mcp-codex
+cd ~/tradingview-mcp-codex
 npm install
 ```
 
@@ -143,7 +143,7 @@ Or use the MCP tool after setup: `"Use tv_launch to start TradingView in debug m
 The Windows installer handles this for you. If you want to do it manually in Codex instead:
 
 ```powershell
-codex mcp add tradingview -- node C:\Users\YOUR_USERNAME\tradingview-mcp-jackson\src\server.js
+codex mcp add tradingview -- node C:\Users\YOUR_USERNAME\tradingview-mcp-codex\src\server.js
 ```
 
 Then fully restart Codex so it reloads MCP servers.

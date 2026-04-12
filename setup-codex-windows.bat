@@ -3,7 +3,7 @@ setlocal
 
 set "SCRIPT_DIR=%~dp0"
 
-echo TradingView MCP Jackson - Codex Windows Setup
+echo TradingView MCP Codex - Windows Setup
 echo.
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%scripts\setup_codex_windows.ps1"

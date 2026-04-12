@@ -97,7 +97,7 @@ $rulesPath = Join-Path $repoRoot "rules.json"
 $launchScript = Join-Path $repoRoot "scripts\launch_tv_debug.bat"
 $codexConfigPath = Join-Path $HOME ".codex\config.toml"
 
-Write-Section "TradingView MCP Jackson - Codex Setup for Windows"
+Write-Section "TradingView MCP Codex - Setup for Windows"
 Write-Host "This installer will prepare the repo, register the MCP server with Codex, and tell you exactly what to do next." -ForegroundColor Yellow
 Write-Host "Repo: $repoRoot"
 

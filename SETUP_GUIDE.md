@@ -25,8 +25,8 @@ The installer will:
 If the user wants a single prompt to paste into Codex instead of following the manual steps, use:
 
 ```text
-Set up TradingView MCP Jackson for me on this machine.
-Clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git into a local folder, run npm install, register the MCP server with Codex using `codex mcp add tradingview -- node <ABSOLUTE_PATH_TO_REPO>\src\server.js`, copy rules.example.json to rules.json if rules.json does not already exist, and open rules.json so I can fill in my watchlist and trading rules. Then tell me the exact next command or prompt to run to verify the TradingView connection with tv_health_check.
+Set up TradingView MCP Codex for me on this machine.
+Clone https://github.com/CryptoStig/tradingview-mcp-codex.git into a local folder, run npm install, register the MCP server with Codex using `codex mcp add tradingview -- node <ABSOLUTE_PATH_TO_REPO>\src\server.js`, copy rules.example.json to rules.json if rules.json does not already exist, and open rules.json so I can fill in my watchlist and trading rules. Then tell me the exact next command or prompt to run to verify the TradingView connection with tv_health_check.
 ```
 
 ## Manual setup
@@ -34,19 +34,19 @@ Clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git into a local 
 ## Step 1: Clone and Install
 
 ```bash
-git clone https://github.com/LewisWJackson/tradingview-mcp-jackson.git ~/tradingview-mcp-jackson
-cd ~/tradingview-mcp-jackson
+git clone https://github.com/CryptoStig/tradingview-mcp-codex.git ~/tradingview-mcp-codex
+cd ~/tradingview-mcp-codex
 npm install
 ```
 
-If the user specifies a different install path, use that instead of `~/tradingview-mcp-jackson`.
+If the user specifies a different install path, use that instead of `~/tradingview-mcp-codex`.
 
 ## Step 2: Set Up Rules
 
 Copy the example rules file and open it for the user to fill in:
 
 ```bash
-cp ~/tradingview-mcp-jackson/rules.example.json ~/tradingview-mcp-jackson/rules.json
+cp ~/tradingview-mcp-codex/rules.example.json ~/tradingview-mcp-codex/rules.json
 ```
 
 Tell the user: "Open `rules.json` and fill in your watchlist (the symbols you trade), your bias criteria (what makes something bullish/bearish for you), and your risk rules. This is what the morning brief uses every day."
@@ -58,7 +58,7 @@ Tell the user: "Open `rules.json` and fill in your watchlist (the symbols you tr
 For Codex on Windows, the easiest path is the installer above. If you want to add the server manually instead:
 
 ```powershell
-codex mcp add tradingview -- node C:\Users\YOUR_USERNAME\tradingview-mcp-jackson\src\server.js
+codex mcp add tradingview -- node C:\Users\YOUR_USERNAME\tradingview-mcp-codex\src\server.js
 ```
 
 If a `tradingview` entry already exists in Codex, remove it first:
@@ -136,7 +136,7 @@ To retrieve tomorrow: *"Get yesterday's session using session_get"*
 To use the `tv` CLI command globally:
 
 ```bash
-cd ~/tradingview-mcp-jackson
+cd ~/tradingview-mcp-codex
 npm link
 ```
 
