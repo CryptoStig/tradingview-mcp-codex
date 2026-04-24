@@ -5,16 +5,32 @@ import { getClient, getTargetInfo, evaluate } from '../connection.js';
 import { existsSync } from 'fs';
 import { execSync, spawn } from 'child_process';
 
+function runPowerShell(script, timeout = 8000) {
+  const escaped = script.replace(/"/g, '`"');
+  const command = ['powershell', '-NoProfile', '-Command', `"${escaped}"`];
+  return execSync(command.join(' '), { timeout }).toString().trim();
+}
+
 function detectWindowsStoreTradingView() {
   try {
-    const command = [
-      'powershell',
-      '-NoProfile',
-      '-Command',
-      "\"$pkg = Get-AppxPackage *TradingView* | Sort-Object Version -Descending | Select-Object -First 1; if ($pkg -and $pkg.InstallLocation) { Join-Path $pkg.InstallLocation 'TradingView.exe' }\"",
-    ];
-    const output = execSync(command.join(' '), { timeout: 5000 }).toString().trim();
-    return output && existsSync(output) ? output : null;
+    const output = runPowerShell(
+      "$pkg = Get-AppxPackage *TradingView* | Sort-Object Version -Descending | Select-Object -First 1; if ($pkg -and $pkg.InstallLocation) { [pscustomobject]@{ exePath = (Join-Path $pkg.InstallLocation 'TradingView.exe'); packageFamilyName = $pkg.PackageFamilyName; appId = 'TradingView.Desktop' } | ConvertTo-Json -Compress }"
+    );
+    if (!output) return null;
+    const parsed = JSON.parse(output);
+    return parsed?.exePath && existsSync(parsed.exePath) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function findLatestTradingViewPid() {
+  try {
+    const output = runPowerShell(
+      "$tvPid = Get-Process TradingView -ErrorAction SilentlyContinue | Sort-Object StartTime -Descending | Select-Object -First 1 -ExpandProperty Id; if ($tvPid) { Write-Output $tvPid }",
+      5000
+    );
+    return output ? Number(output) : null;
   } catch {
     return null;
   }
@@ -178,6 +194,7 @@ export async function launch({ port, kill_existing } = {}) {
   const cdpPort = port || 9222;
   const killFirst = kill_existing !== false;
   const platform = process.platform;
+  let windowsStoreInfo = null;
 
   const pathMap = {
     darwin: [
@@ -213,7 +230,8 @@ export async function launch({ port, kill_existing } = {}) {
   }
 
   if (!tvPath && platform === 'win32') {
-    tvPath = detectWindowsStoreTradingView();
+    windowsStoreInfo = detectWindowsStoreTradingView();
+    tvPath = windowsStoreInfo?.exePath || null;
   }
 
   if (!tvPath && platform === 'darwin') {
@@ -238,8 +256,15 @@ export async function launch({ port, kill_existing } = {}) {
     } catch { /* may not be running */ }
   }
 
-  const child = spawn(tvPath, [`--remote-debugging-port=${cdpPort}`], { detached: true, stdio: 'ignore' });
-  child.unref();
+  let child = null;
+  if (platform === 'win32' && windowsStoreInfo?.packageFamilyName) {
+    // Windows Store builds crash when launched from the raw WindowsApps exe path.
+    const appRef = `shell:AppsFolder\\${windowsStoreInfo.packageFamilyName}!${windowsStoreInfo.appId}`;
+    runPowerShell(`Start-Process '${appRef}' -ArgumentList '--remote-debugging-port=${cdpPort}'`);
+  } else {
+    child = spawn(tvPath, [`--remote-debugging-port=${cdpPort}`], { detached: true, stdio: 'ignore' });
+    child.unref();
+  }
 
   for (let i = 0; i < 15; i++) {
     await new Promise(r => setTimeout(r, 1000));
@@ -255,7 +280,7 @@ export async function launch({ port, kill_existing } = {}) {
       if (ready) {
         const info = JSON.parse(ready);
         return {
-          success: true, platform, binary: tvPath, pid: child.pid,
+          success: true, platform, binary: tvPath, pid: child?.pid ?? findLatestTradingViewPid(),
           cdp_port: cdpPort, cdp_url: `http://localhost:${cdpPort}`,
           browser: info.Browser, user_agent: info['User-Agent'],
         };
@@ -264,7 +289,7 @@ export async function launch({ port, kill_existing } = {}) {
   }
 
   return {
-    success: true, platform, binary: tvPath, pid: child.pid, cdp_port: cdpPort, cdp_ready: false,
+    success: true, platform, binary: tvPath, pid: child?.pid ?? findLatestTradingViewPid(), cdp_port: cdpPort, cdp_ready: false,
     warning: 'TradingView launched but CDP not responding yet. It may still be loading. Try tv_health_check in a few seconds.',
   };
 }
